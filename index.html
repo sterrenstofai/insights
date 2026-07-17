@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sterrenstof Trendradar — Live</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f5f1;
+  --card:#fffdf9;
+  --ink:#141414;
+  --ink-soft:#6b6862;
+  --ink-faint:#a09c94;
+  --accent:#e02b20;
+  --line:#eceae4;
+  --radius:18px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:'Inter Tight',sans-serif;font-weight:500;letter-spacing:-0.01em}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+input,select{font-family:inherit;font-size:14px}
+a{color:inherit}
+
+.app{max-width:1180px;margin:0 auto;padding:32px 24px 80px}
+header.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand h1{font-size:22px}
+.brand .tag{font-size:12px;color:var(--ink-faint);letter-spacing:0.04em;text-transform:uppercase}
+.pulse{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:8px;vertical-align:1px;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.25}}
+
+/* live-balk */
+.livebar{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  background:var(--card);border-radius:999px;padding:8px 10px 8px 20px;margin-bottom:26px;
+  font-size:13px;color:var(--ink-soft);
+}
+.livebar .grow{flex:1}
+.livebar select{
+  border:1px solid var(--line);border-radius:999px;padding:7px 12px;background:var(--bg);outline:none;color:var(--ink);
+}
+.countdown{font-variant-numeric:tabular-nums;color:var(--ink-faint)}
+.countdown.on{color:var(--ink)}
+
+.btn{padding:11px 22px;border-radius:999px;font-size:14px;font-weight:500;background:var(--ink);color:#fff;transition:opacity .15s ease;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{opacity:0.85}
+.btn:disabled{opacity:0.4;cursor:default}
+.btn.ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line)}
+.btn.ghost:hover{color:var(--ink);border-color:var(--ink-faint);opacity:1}
+.btn.sm{padding:8px 16px;font-size:13px}
+.btn.danger-text{background:transparent;color:var(--ink-faint);padding:11px 10px;font-size:13px}
+.btn.danger-text:hover{color:var(--accent)}
+
+/* nav */
+.nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;align-items:center}
+.chip{padding:9px 18px;border-radius:999px;background:var(--card);font-size:14px;color:var(--ink-soft);border:1px solid transparent;transition:all .15s ease}
+.chip:hover{color:var(--ink)}
+.chip.active{background:var(--ink);color:#fff}
+.chip.add{color:var(--ink-faint);border:1px dashed var(--ink-faint);background:transparent}
+.chip.add:hover{color:var(--ink);border-color:var(--ink)}
+
+/* dashboard grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.dash-card{
+  background:var(--card);border-radius:var(--radius);padding:22px 24px;
+  display:flex;flex-direction:column;gap:12px;cursor:pointer;
+  transition:transform .12s ease;
+}
+.dash-card:hover{transform:translateY(-2px)}
+.dash-card .d-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.dash-card h3{font-size:17px}
+.dash-card .d-time{font-size:12px;color:var(--ink-faint);white-space:nowrap}
+.dash-card .d-time.stale{color:var(--accent)}
+.dash-card .d-sum{font-size:13.5px;color:var(--ink-soft);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+.badge{font-size:11px;letter-spacing:0.04em;padding:5px 10px;border-radius:999px;background:var(--bg);color:var(--ink-soft)}
+.badge b{color:var(--ink);font-weight:600}
+.badge.hot{background:#fdeceb;color:#8a2620}
+
+/* statsbar (Trend Hunter-stijl kerncijfers) */
+.pipeline{display:flex;align-items:stretch;gap:0;margin-bottom:22px;flex-wrap:wrap}
+.p-stage{
+  flex:1;min-width:170px;background:var(--card);border-radius:16px;padding:18px 20px;
+  position:relative;
+}
+.p-stage .p-eyebrow{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+.p-stage .n{font-family:'Inter Tight',sans-serif;font-size:28px;font-weight:500;line-height:1.1}
+.p-stage .n.accent{color:var(--accent)}
+.p-stage .l{font-size:12px;color:var(--ink-soft);margin-top:4px}
+.p-arrow{
+  display:flex;align-items:center;justify-content:center;width:34px;flex:none;
+  color:var(--accent);font-size:18px;
+}
+@media (max-width:720px){
+  .pipeline{flex-direction:column}
+  .p-arrow{width:100%;height:26px;transform:rotate(90deg)}
+}
+.statsbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:22px}
+.stat{background:var(--card);border-radius:16px;padding:18px 20px}
+.stat .n{font-family:'Inter Tight',sans-serif;font-size:28px;font-weight:500;line-height:1.1}
+.stat .n.accent{color:var(--accent)}
+.stat .l{font-size:12px;color:var(--ink-faint);margin-top:4px;letter-spacing:0.03em}
+
+/* klantstatus-strip */
+.status-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:22px}
+.status-pill{
+  flex:none;background:var(--card);border-radius:14px;padding:12px 16px;cursor:pointer;
+  display:flex;align-items:center;gap:10px;font-size:13px;
+}
+.status-pill:hover{outline:1px solid var(--line)}
+.status-pill b{font-weight:600;font-size:14px}
+.status-dot{width:7px;height:7px;border-radius:50%;flex:none}
+.status-dot.ok{background:#2f9e5f}
+.status-dot.stale{background:var(--accent)}
+.status-dot.none{background:var(--ink-faint)}
+.status-pill .st{color:var(--ink-faint);font-size:12px}
+
+/* feed filters */
+.feed-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.f-chip{padding:7px 15px;border-radius:999px;font-size:13px;color:var(--ink-soft);background:transparent;border:1px solid var(--line)}
+.f-chip:hover{color:var(--ink)}
+.f-chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.f-chip.prio.active{background:var(--accent);border-color:var(--accent)}
+.feed-count{font-size:12px;color:var(--ink-faint);margin-left:auto}
+
+/* feedkaarten */
+.feed-card{background:var(--card);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px}
+.fc-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fc-client{font-size:12px;font-weight:600;cursor:pointer}
+.fc-client:hover{text-decoration:underline;text-underline-offset:2px}
+.fc-cat{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-faint);padding:3px 8px;border-radius:999px;background:var(--bg)}
+.prio{font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;font-weight:600;margin-left:auto}
+.prio.hoog{background:var(--accent);color:#fff}
+.prio.middel{background:var(--bg);color:var(--ink-soft)}
+.prio.laag{background:var(--bg);color:var(--ink-faint)}
+.feed-card h4{font-size:15px;font-weight:600;font-family:'Inter',sans-serif}
+.feed-card .fc-sum{font-size:13.5px;color:var(--ink-soft)}
+.feed-card .fc-why{font-size:12.5px;color:var(--ink);padding-left:10px;border-left:2px solid var(--accent)}
+.feed-card .fc-src{font-size:12px;color:var(--ink-faint);margin-top:auto}
+.feed-card .fc-src a{color:var(--ink-faint);text-decoration:underline;text-underline-offset:2px}
+.feed-card .fc-src a:hover{color:var(--ink)}
+.fc-actions{display:flex;gap:8px;margin-top:6px;padding-top:10px;border-top:1px solid var(--line)}
+.c-btn{font-size:12px;padding:6px 13px;border-radius:999px;border:1px solid var(--line);color:var(--ink-soft);background:transparent}
+.c-btn:hover{color:var(--ink);border-color:var(--ink-faint)}
+.c-btn.saved{background:var(--ink);color:#fff;border-color:var(--ink)}
+.c-btn.hide:hover{color:var(--accent);border-color:var(--accent)}
+.f-chip.star.active{background:var(--ink);border-color:var(--ink)}
+.d-loading{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-faint)}
+.mini-spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .9s linear infinite;flex:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.d-headline{font-size:13px;color:var(--ink);padding-left:10px;border-left:2px solid var(--accent)}
+
+/* detail (klantweergave) */
+.client-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px}
+.client-head h2{font-size:26px}
+.client-meta{font-size:13px;color:var(--ink-soft);margin-top:4px}
+.client-meta span+span::before{content:"·";margin:0 8px;color:var(--ink-faint)}
+.head-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.days{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0 22px}
+.day-tab{padding:7px 14px;border-radius:10px;font-size:13px;color:var(--ink-soft);background:transparent;border:1px solid var(--line)}
+.day-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+.section-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin:26px 0 12px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:"";flex:1;height:1px;background:var(--line)}
+.insight{background:var(--card);border-radius:14px;padding:18px 20px;margin-bottom:10px}
+.insight .i-top{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.insight h4{font-size:15px;font-weight:600;font-family:'Inter',sans-serif}
+.insight .src{font-size:12px;color:var(--ink-faint);white-space:nowrap}
+.insight .src a{color:var(--ink-faint);text-decoration:underline;text-underline-offset:2px}
+.insight .src a:hover{color:var(--ink)}
+.insight p{font-size:14px;color:var(--ink-soft);margin-top:6px}
+.insight .why{margin-top:10px;font-size:13px;color:var(--ink);padding-left:12px;border-left:2px solid var(--accent)}
+.insight .comp-name{display:inline-block;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;font-weight:600}
+.insight .own-name{display:inline-block;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:#2f9e5f;margin-bottom:4px;font-weight:600}
+.insight.comp-review{background:#fbf6f3;border-left:3px solid var(--accent)}
+.fc-cat.own{background:#eaf5ee;color:#2f7a4f}
+.fc-cat.comp{background:#fdeceb;color:#8a2620}
+.fc-cat.idea-cat{background:#141414;color:#fff}
+.idea{
+  margin-top:10px;font-size:13px;color:var(--ink);
+  background:var(--bg);border-radius:10px;padding:10px 14px;line-height:1.5;
+}
+.idea span{
+  display:block;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--accent);font-weight:600;margin-bottom:3px;
+}
+.summary-card{background:var(--ink);color:#fff;border-radius:var(--radius);padding:26px 28px;margin-bottom:8px}
+.summary-card .s-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:10px}
+.summary-card p{font-size:16px;line-height:1.6;font-family:'Inter Tight',sans-serif}
+.actions-list{list-style:none}
+.actions-list li{background:var(--card);border-radius:14px;padding:14px 20px;margin-bottom:8px;font-size:14px;display:flex;gap:12px;align-items:baseline}
+.actions-list li::before{content:"→";color:var(--accent);font-weight:600}
+
+.empty{text-align:center;padding:70px 24px;color:var(--ink-soft)}
+.empty h3{font-size:20px;margin-bottom:8px;color:var(--ink)}
+.empty p{font-size:14px;max-width:440px;margin:0 auto 22px}
+.loading{text-align:center;padding:60px 24px;color:var(--ink-soft);font-size:14px}
+.loading .steps{margin-top:16px;font-size:13px;color:var(--ink-faint);min-height:20px}
+.spinner{width:26px;height:26px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;margin:0 auto 16px;animation:spin .9s linear infinite}
+.error-box{background:#fdf1f0;border-radius:14px;padding:16px 20px;font-size:14px;color:#8a2620;margin-bottom:18px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(20,20,20,0.35);display:none;align-items:flex-start;justify-content:center;padding:60px 20px;z-index:50;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:var(--card);border-radius:20px;padding:32px;width:100%;max-width:520px}
+.modal h3{font-size:20px;margin-bottom:20px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+.field input{width:100%;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);outline:none}
+.field input:focus{border-color:var(--ink-faint)}
+.field .hint{font-size:12px;color:var(--ink-faint);margin-top:4px}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px}
+
+@media (max-width:640px){
+  .app{padding:20px 14px 60px}
+  .client-head h2{font-size:22px}
+  .livebar{border-radius:20px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <h1><span class="pulse"></span>Sterrenstof Trendradar</h1>
+      <span class="tag">Live dashboard</span>
+    </div>
+    <div style="font-size:13px;color:var(--ink-soft)" id="todayLabel"></div>
+  </header>
+
+  <div class="livebar">
+    <span id="liveStatus">Laatste update: —</span>
+    <span class="countdown" id="countdown"></span>
+    <span class="grow"></span>
+    <label for="intervalSel" style="color:var(--ink-faint)">Auto-refresh</label>
+    <select id="intervalSel">
+      <option value="0">Uit</option>
+      <option value="30">Elke 30 min</option>
+      <option value="60">Elk uur</option>
+      <option value="120">Elke 2 uur</option>
+    </select>
+    <button class="btn sm" id="btnRefreshAll" onclick="refreshAll()">Ververs alles</button>
+  </div>
+
+  <div class="nav" id="nav"></div>
+
+  <main id="main"></main>
+</div>
+
+<!-- klant modal -->
+<div class="overlay" id="clientModal">
+  <div class="modal">
+    <h3 id="modalTitle">Nieuwe klant</h3>
+    <div class="field"><label for="fName">Klantnaam</label><input id="fName" placeholder="Bijv. Coolblue"></div>
+    <div class="field"><label for="fSector">Sector / markt</label><input id="fSector" placeholder="Bijv. consumentenelektronica retail, Nederland"></div>
+    <div class="field"><label for="fSite">Website</label><input id="fSite" placeholder="bijv. coolblue.nl"></div>
+    <div class="field"><label for="fComp">Concurrenten (max 4)</label><input id="fComp" placeholder="Kommagescheiden, bijv. Bol, MediaMarkt, Amazon"><div class="hint">Maximaal 4 — zo krijgt elke concurrent echte aandacht in de zoekopdrachten</div></div>
+    <div class="field"><label for="fReviews">Reviewbronnen (URL's)</label><input id="fReviews" placeholder="bijv. advieskeuze.nl/…/beoordelingen, Google reviews-link"><div class="hint">Kommagescheiden. Reviews van concurrenten worden op dezelfde platforms gezocht</div></div>
+    <div class="field"><label for="fKeywords">Extra zoektermen (optioneel)</label><input id="fKeywords" placeholder="Bijv. bezorging, duurzaamheid, klantenservice"></div>
+    <div class="modal-actions">
+      <button class="btn danger-text" id="btnDeleteClient" style="display:none">Klant verwijderen</button>
+      <button class="btn ghost" id="btnCancelModal">Annuleren</button>
+      <button class="btn" id="btnSaveClient">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Sterrenstof Trendradar — Live (v2)
+   - Dashboardweergave over alle klanten + klantdetail
+   - "Ververs alles": sequentieel live insights per klant
+   - Auto-refresh op interval zolang het tabblad open is
+   - Alles uit echte websearch; geen resultaten = lege sectie
+   ============================================================ */
+
+const STORE_KEY = "trendradar:data";
+const PREF_KEY  = "trendradar:prefs";
+let state = { clients: [], insights: {}, curation: {} };
+let prefs = { interval: 0 };
+let view = "dashboard";          // "dashboard" | clientId
+let activeDate = null;
+let editingClientId = null;
+let refreshing = false;
+let refreshingClientIds = new Set();
+let timer = null, nextRunAt = null, tick = null;
+
+const $ = (id)=>document.getElementById(id);
+
+/* ---------- opslag (localStorage) ---------- */
+async function loadState(){
+  try{
+    const v = localStorage.getItem(STORE_KEY);
+    if(v) state = JSON.parse(v);
+  }catch(e){}
+  if(!state.curation) state.curation = {};
+  try{
+    const p = localStorage.getItem(PREF_KEY);
+    if(p) prefs = JSON.parse(p);
+  }catch(e){}
+}
+async function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+async function savePrefs(){
+  try{ localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); }catch(e){}
+}
+
+/* ---------- helpers ---------- */
+function todayKey(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(key){
+  const [y,m,d] = key.split("-");
+  const mnd = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
+  return `${parseInt(d)} ${mnd[parseInt(m)-1]} ${y}`;
+}
+function fmtTime(ts){
+  return new Date(ts).toLocaleTimeString("nl-NL",{hour:"2-digit",minute:"2-digit"});
+}
+function latestReport(clientId){
+  const ins = state.insights[clientId] || {};
+  const dates = Object.keys(ins).sort();
+  return dates.length ? ins[dates[dates.length-1]] : null;
+}
+function esc(s){ return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+function escAttr(s){ return esc(s).replace(/javascript:/gi,""); }
+
+/* ---------- nav ---------- */
+function renderNav(){
+  const nav = $("nav");
+  nav.innerHTML = "";
+  const dash = document.createElement("button");
+  dash.className = "chip" + (view==="dashboard" ? " active" : "");
+  dash.textContent = "Dashboard";
+  dash.onclick = ()=>{ view="dashboard"; render(); };
+  nav.appendChild(dash);
+  state.clients.forEach(c=>{
+    const chip = document.createElement("button");
+    chip.className = "chip" + (view===c.id ? " active" : "");
+    chip.textContent = c.name;
+    chip.onclick = ()=>{ view=c.id; activeDate=null; render(); };
+    nav.appendChild(chip);
+  });
+  const add = document.createElement("button");
+  add.className = "chip add";
+  add.textContent = "+ Klant toevoegen";
+  add.onclick = ()=>openModal(null);
+  nav.appendChild(add);
+}
+
+/* ---------- render ---------- */
+function render(){
+  renderNav();
+  const main = $("main");
+  if(state.clients.length === 0){
+    main.innerHTML = `<div class="empty">
+      <h3>Nog geen klanten in de radar</h3>
+      <p>Voeg klanten toe en het dashboard toont per klant de laatste insights — handmatig of automatisch ververst op interval.</p>
+      <button class="btn" onclick="openModal(null)">Eerste klant toevoegen</button></div>`;
+    return;
+  }
+  if(view === "dashboard"){ renderDashboard(); }
+  else{
+    if(!state.clients.find(c=>c.id===view)){ view="dashboard"; return render(); }
+    renderClientDetail(view);
+  }
+}
+
+let dashCat = "alle";
+let dashPrioOnly = false;
+let dashSavedOnly = false;
+let feedRef = []; // referentie naar huidige feeditems voor curatie-acties
+
+function itemKey(f){ return `${f._client.id}|${f._date}|${f._cat}|${f.titel||""}`; }
+
+function curate(idx, action){
+  const f = feedRef[idx];
+  if(!f) return;
+  const key = itemKey(f);
+  if(!state.curation) state.curation = {};
+  if(action === "save"){
+    state.curation[key] = state.curation[key]==="saved" ? undefined : "saved";
+    if(!state.curation[key]) delete state.curation[key];
+  }else if(action === "hide"){
+    state.curation[key] = "hidden";
+  }else if(action === "unhide"){
+    delete state.curation[key];
+  }
+  saveState();
+  render();
+}
+
+function renderDashboard(){
+  const main = $("main");
+  const today = todayKey();
+
+  // feed opbouwen uit het laatste rapport per klant
+  const feed = [];
+  let clientsToday = 0;
+  state.clients.forEach(c=>{
+    const rep = latestReport(c.id);
+    if(!rep) return;
+    if(rep.date === today) clientsToday++;
+    const push = (arr,cat)=>(arr||[]).forEach(it=>feed.push({...it,_client:c,_cat:cat,_date:rep.date}));
+    push(rep.nieuws,"nieuws");
+    push(rep.markt,"markt");
+    push(rep.reviews,"reviews");
+    push(rep.concurrentie,"concurrentie");
+    push(rep.inhakers,"inhakers");
+  });
+  const prioRank = {hoog:0, middel:1, laag:2};
+  feed.sort((a,b)=>((prioRank[a.prioriteit]??1)-(prioRank[b.prioriteit]??1)) || (a._date<b._date?1:-1));
+
+  const cur = state.curation || {};
+  const hoog = feed.filter(f=>f.prioriteit==="hoog").length;
+  const savedCount = feed.filter(f=>cur[itemKey(f)]==="saved").length;
+  const hiddenCount = feed.filter(f=>cur[itemKey(f)]==="hidden").length;
+
+  let h = `<div class="pipeline">
+    <div class="p-stage">
+      <div class="p-eyebrow">Stap 1 · AI verzamelt</div>
+      <div class="n">${feed.length}</div>
+      <div class="l">signalen uit live websearch, over ${clientsToday}/${state.clients.length} klanten actueel vandaag</div>
+    </div>
+    <div class="p-arrow">→</div>
+    <div class="p-stage">
+      <div class="p-eyebrow">Stap 2 · AI filtert</div>
+      <div class="n ${hoog?'accent':''}">${hoog}</div>
+      <div class="l">gemarkeerd als hoge prioriteit${hiddenCount ? ` · ${hiddenCount} door jou verborgen` : ""}</div>
+    </div>
+    <div class="p-arrow">→</div>
+    <div class="p-stage">
+      <div class="p-eyebrow">Stap 3 · Jij cureert</div>
+      <div class="n">${savedCount}</div>
+      <div class="l">bewaard en klaar voor de klant</div>
+    </div>
+  </div>`;
+
+  // klantstatus-strip
+  h += `<div class="status-strip">`;
+  state.clients.forEach(c=>{
+    const rep = latestReport(c.id);
+    const busy = refreshingClientIds.has(c.id);
+    let dot="none", st="geen data";
+    if(busy){ dot="none"; st="bezig…"; }
+    else if(rep){
+      if(rep.date===today){ dot="ok"; st="vandaag " + (rep.generatedAt?fmtTime(rep.generatedAt):""); }
+      else{ dot="stale"; st=fmtDate(rep.date); }
+    }
+    h += `<div class="status-pill" onclick="view='${c.id}';activeDate=null;render()">
+      ${busy ? '<span class="mini-spin"></span>' : `<span class="status-dot ${dot}"></span>`}
+      <b>${esc(c.name)}</b><span class="st">${st}</span></div>`;
+  });
+  h += `</div>`;
+
+  // filters + feed
+  if(feed.length){
+    const cats = [["alle","Alle"],["nieuws","Nieuws"],["markt","Markt"],["inhakers","Inhakers"],["reviews","Reviews"],["concurrentie","Concurrentie"]];
+    const filtered = feed.filter(f=>{
+      const st = cur[itemKey(f)];
+      if(st==="hidden" && !dashSavedOnly) return false;
+      if(dashSavedOnly && st!=="saved") return false;
+      if(dashCat!=="alle" && f._cat!==dashCat) return false;
+      if(dashPrioOnly && f.prioriteit!=="hoog") return false;
+      return true;
+    });
+    feedRef = filtered;
+    h += `<div class="feed-filters">`;
+    cats.forEach(([v,l])=>{
+      h += `<button class="f-chip ${dashCat===v?'active':''}" onclick="dashCat='${v}';render()">${l}</button>`;
+    });
+    h += `<button class="f-chip prio ${dashPrioOnly?'active':''}" onclick="dashPrioOnly=!dashPrioOnly;render()">Alleen hoge prioriteit</button>`;
+    h += `<button class="f-chip star ${dashSavedOnly?'active':''}" onclick="dashSavedOnly=!dashSavedOnly;render()">★ Gecureerd${savedCount?` (${savedCount})`:""}</button>`;
+    h += `<span class="feed-count">${filtered.length} van ${feed.length} insights</span></div>`;
+
+    h += `<div class="grid">`;
+    filtered.forEach((f,i)=>{ h += cardHTML(f,i,true); });
+    h += `</div>`;
+    if(!filtered.length){
+      h += `<div class="empty" style="padding:40px"><p>${dashSavedOnly ? "Nog niets gecureerd — bewaar insights uit de feed met ☆." : "Geen insights binnen dit filter."}</p></div>`;
+    }
+  }else{
+    h += `<div class="empty">
+      <h3>De radar is nog leeg</h3>
+      <p>Klik op "Ververs alles" om voor al je klanten live insights op te halen. Daarna vult dit dashboard zich met een gefilterde feed over alle klanten heen.</p>
+      <button class="btn" onclick="refreshAll()">Ververs alles</button></div>`;
+  }
+  main.innerHTML = h;
+}
+
+function renderClientDetail(clientId){
+  const main = $("main");
+  const client = state.clients.find(c=>c.id===clientId);
+  const clientInsights = state.insights[clientId] || {};
+  const dates = Object.keys(clientInsights).sort().reverse();
+  if(!activeDate || !clientInsights[activeDate]) activeDate = dates[0] || null;
+
+  let html = `<div class="client-head">
+    <div><h2>${esc(client.name)}</h2>
+      <div class="client-meta"><span>${esc(client.sector||"Sector onbekend")}</span>
+      ${client.competitors && client.competitors.length ? `<span>${client.competitors.map(esc).join(", ")}</span>` : ""}
+      ${client.reviewSources && client.reviewSources.length
+        ? `<span>${client.reviewSources.length} reviewbron${client.reviewSources.length>1?"nen":""}</span>`
+        : `<span style="color:var(--accent)">geen reviewbronnen ingesteld — voeg toe via Bewerken</span>`}</div>
+    </div>
+    <div class="head-actions">
+      <button class="btn ghost" onclick="openModal('${client.id}')">Bewerken</button>
+      <button class="btn" id="btnGenerate" onclick="generateFor('${client.id}', true)" ${refreshingClientIds.has(client.id)?"disabled":""}>Genereer insights van vandaag</button>
+    </div></div>`;
+
+  if(dates.length){
+    html += `<div class="days">` + dates.map(d=>
+      `<button class="day-tab ${d===activeDate?'active':''}" onclick="activeDate='${d}';render()">${fmtDate(d)}</button>`).join("") + `</div>`;
+  }
+  html += `<div id="results">`;
+  if(refreshingClientIds.has(client.id)){
+    html += loadingBlock(client.name);
+  }else if(activeDate && clientInsights[activeDate]){
+    html += renderReport(clientInsights[activeDate], client);
+  }else{
+    html += `<div class="empty"><h3>Nog geen insights voor ${esc(client.name)}</h3>
+      <p>Genereer nieuws, actualiteiten, reviews en concurrentie-activiteit via live websearch — altijd met bronvermelding.</p></div>`;
+  }
+  html += `</div>`;
+  main.innerHTML = html;
+}
+
+function loadingBlock(name){
+  return `<div class="loading"><div class="spinner"></div>Live insights ophalen voor ${esc(name)}…
+    <div class="steps">Websearches uitvoeren en resultaten structureren</div></div>`;
+}
+
+let clientCat = "alle";
+
+function renderReport(rep, client){
+  let h = "";
+  if(rep.samenvatting){
+    h += `<div class="summary-card"><div class="s-label">Dagsamenvatting · ${fmtDate(rep.date)}${rep.generatedAt ? " · ververst " + fmtTime(rep.generatedAt) : ""}</div>
+      <p>${esc(rep.samenvatting)}</p>
+      ${rep.reviewprofiel ? `<div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.15);font-size:13px;color:rgba(255,255,255,0.75)">Reviewprofiel: ${esc(rep.reviewprofiel)}</div>` : ""}</div>`;
+  }else if(rep.reviewprofiel){
+    h += `<div class="summary-card"><div class="s-label">Reviewprofiel</div><p>${esc(rep.reviewprofiel)}</p></div>`;
+  }
+
+  // zelfde feedstructuur als het dashboard, maar voor één klant en één dag
+  const items = [];
+  const push = (arr,cat)=>(arr||[]).forEach(it=>items.push({...it,_client:client,_cat:cat,_date:rep.date}));
+  push(rep.nieuws,"nieuws");
+  push(rep.markt,"markt");
+  push(rep.inhakers,"inhakers");
+  push(rep.reviews,"reviews");
+  push(rep.concurrentie,"concurrentie");
+  const prioRank = {hoog:0, middel:1, laag:2};
+  items.sort((a,b)=>(prioRank[a.prioriteit]??1)-(prioRank[b.prioriteit]??1));
+
+  const cats = [["alle","Alle"],["nieuws","Nieuws"],["markt","Markt"],["inhakers","Inhakers"],["reviews","Reviews"],["concurrentie","Concurrentie"]];
+  const countPer = {};
+  items.forEach(f=>{ countPer[f._cat]=(countPer[f._cat]||0)+1; });
+  const leeg = cats.filter(([v])=>v!=="alle" && !countPer[v]).map(([,l])=>l);
+
+  const filtered = items.filter(f=>clientCat==="alle"||f._cat===clientCat);
+  feedRef = filtered;
+
+  h += `<div class="feed-filters" style="margin-top:22px">`;
+  cats.forEach(([v,l])=>{
+    h += `<button class="f-chip ${clientCat===v?'active':''}" onclick="clientCat='${v}';render()">${l}${v!=="alle"&&countPer[v]?` (${countPer[v]})`:""}</button>`;
+  });
+  h += `<span class="feed-count">${filtered.length} insights</span></div>`;
+  if(leeg.length){
+    h += `<div style="font-size:12px;color:var(--ink-faint);margin:-6px 0 14px">Geen resultaten vandaag voor: ${leeg.join(", ")}</div>`;
+  }
+
+  if(filtered.length){
+    h += `<div class="grid">`;
+    filtered.forEach((f,i)=>{ h += cardHTML(f,i,false); });
+    h += `</div>`;
+  }else{
+    h += `<div class="empty" style="padding:40px"><p>Geen insights binnen dit filter.</p></div>`;
+  }
+
+  if(rep.acties && rep.acties.length){
+    h += `<div class="section-label">Kansen & aanbevolen acties</div><ul class="actions-list">`;
+    rep.acties.forEach(a=>{ h += `<li>${esc(a)}</li>`; });
+    h += `</ul>`;
+  }
+  return h;
+}
+
+/* Gedeelde kaartrenderer voor dashboard én klantweergave */
+function cardHTML(f, i, showClient){
+  const st = (state.curation||{})[itemKey(f)];
+  const today = todayKey();
+  let catHtml;
+  if(f._cat==="reviews"){
+    const isC = f.type==="concurrent";
+    catHtml = `<span class="fc-cat ${isC?'comp':'own'}">Review · ${esc(f.bedrijf || (isC ? "concurrent" : f._client.name))}</span>`;
+  }else if(f._cat==="concurrentie" && f.concurrent){
+    catHtml = `<span class="fc-cat comp">${esc(f.concurrent)}</span>`;
+  }else if(f._cat==="inhakers"){
+    catHtml = `<span class="fc-cat idea-cat">Inhaker</span>`;
+  }else{
+    catHtml = `<span class="fc-cat">${{nieuws:"Nieuws",markt:"Markt",reviews:"Reviews",concurrentie:"Concurrentie",inhakers:"Inhaker"}[f._cat]}</span>`;
+  }
+  return `<div class="feed-card">
+    <div class="fc-top">
+      ${showClient ? `<span class="fc-client" onclick="view='${f._client.id}';activeDate=null;render()">${esc(f._client.name)}</span>` : ""}
+      ${catHtml}
+      ${f.prioriteit ? `<span class="prio ${esc(f.prioriteit)}">${esc(f.prioriteit)}</span>` : ""}
+    </div>
+    <h4>${esc(f.titel||"")}</h4>
+    ${f.samenvatting ? `<div class="fc-sum">${esc(f.samenvatting)}</div>` : ""}
+    ${f.relevantie ? `<div class="fc-why">${esc(f.relevantie)}</div>` : ""}
+    ${f._cat==="inhakers" && f.invalshoek ? `<div class="idea"><span>Contentidee</span>${esc(f.invalshoek)}</div>` : ""}
+    ${(f.bron||f.url) ? `<div class="fc-src">${f.url ? `<a href="${escAttr(f.url)}" target="_blank" rel="noopener">${esc(f.bron||"bron")}</a>` : esc(f.bron)}${f._cat==="reviews" && f.datum ? " · "+esc(f.datum) : ""}${f._date!==today ? " · "+fmtDate(f._date) : ""}</div>` : ""}
+    <div class="fc-actions">
+      <button class="c-btn ${st==='saved'?'saved':''}" onclick="curate(${i},'save')">${st==='saved' ? '★ Bewaard' : '☆ Bewaren'}</button>
+      ${st==='hidden'
+        ? `<button class="c-btn" onclick="curate(${i},'unhide')">Terugzetten</button>`
+        : (st!=='saved' ? `<button class="c-btn hide" onclick="curate(${i},'hide')">Verbergen</button>` : "")}
+    </div>
+  </div>`;
+}
+
+/* ---------- genereren ---------- */
+async function generateFor(clientId, rerenderDetail){
+  const client = state.clients.find(c=>c.id===clientId);
+  if(!client || refreshingClientIds.has(clientId)) return;
+  refreshingClientIds.add(clientId);
+  render();
+
+  const dateKey = todayKey();
+
+  try{
+    const report = await apiGenerate(client);
+    report.date = dateKey;
+    report.generatedAt = Date.now();
+
+    if(!state.insights[clientId]) state.insights[clientId] = {};
+    state.insights[clientId][dateKey] = report;
+    if(view === clientId) activeDate = dateKey;
+    await saveState();
+  }catch(err){
+    if(view === clientId){
+      refreshingClientIds.delete(clientId);
+      render();
+      const r = $("results");
+      if(r) r.insertAdjacentHTML("afterbegin",
+        `<div class="error-box">Insights ophalen is niet gelukt: ${esc(err.message)}. Probeer het opnieuw.</div>`);
+      return;
+    }
+  }
+  refreshingClientIds.delete(clientId);
+  render();
+}
+
+function getAccessKey(forceAsk){
+  let k = localStorage.getItem("trendradar:key") || "";
+  if(!k || forceAsk){
+    k = window.prompt("Toegangscode voor de Trendradar (zoals ingesteld in Vercel als ACCESS_KEY):") || "";
+    k = k.trim();
+    if(k) localStorage.setItem("trendradar:key", k);
+  }
+  return k.trim();
+}
+
+async function apiGenerate(client){
+  let key = getAccessKey(false);
+  const doCall = (k)=>fetch("/api/generate", {
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-access-key":k},
+    body: JSON.stringify({ client })
+  });
+  let resp = await doCall(key);
+  if(resp.status === 401){
+    localStorage.removeItem("trendradar:key");
+    key = getAccessKey(true);
+    if(!key) throw new Error("Geen toegangscode ingevoerd");
+    resp = await doCall(key);
+  }
+  const data = await resp.json().catch(()=>({}));
+  if(!resp.ok) throw new Error(data.error || ("Serverfout (" + resp.status + ")"));
+  if(!data.report) throw new Error("Geen rapport ontvangen van de server");
+  return data.report;
+}
+
+/* ---------- ververs alles + auto-refresh ---------- */
+async function refreshAll(){
+  if(refreshing || state.clients.length===0) return;
+  refreshing = true;
+  const btn = $("btnRefreshAll");
+  btn.disabled = true;
+  $("liveStatus").textContent = "Bezig met verversen…";
+  view = "dashboard";
+  render();
+
+  for(const c of state.clients){
+    await generateFor(c.id, false);
+    // korte pauze tussen klanten om de API te ontzien
+    await new Promise(r=>setTimeout(r, 1200));
+  }
+
+  refreshing = false;
+  btn.disabled = false;
+  $("liveStatus").textContent = "Laatste update: " + fmtTime(Date.now());
+  scheduleNext();
+  render();
+}
+
+function scheduleNext(){
+  if(timer){ clearTimeout(timer); timer=null; }
+  if(tick){ clearInterval(tick); tick=null; }
+  nextRunAt = null;
+  const mins = Number(prefs.interval||0);
+  const cd = $("countdown");
+  if(!mins){ cd.textContent=""; cd.classList.remove("on"); return; }
+  nextRunAt = Date.now() + mins*60*1000;
+  timer = setTimeout(()=>refreshAll(), mins*60*1000);
+  cd.classList.add("on");
+  const upd = ()=>{
+    if(!nextRunAt) return;
+    const s = Math.max(0, Math.round((nextRunAt - Date.now())/1000));
+    const mm = String(Math.floor(s/60)).padStart(2,"0");
+    const ss = String(s%60).padStart(2,"0");
+    cd.textContent = `· volgende update over ${mm}:${ss}`;
+  };
+  upd();
+  tick = setInterval(upd, 1000);
+}
+
+$("intervalSel").addEventListener("change", async (e)=>{
+  prefs.interval = Number(e.target.value);
+  await savePrefs();
+  scheduleNext();
+});
+
+/* ---------- modal ---------- */
+function openModal(clientId){
+  editingClientId = clientId;
+  const c = clientId ? state.clients.find(x=>x.id===clientId) : null;
+  $("modalTitle").textContent = c ? "Klant bewerken" : "Nieuwe klant";
+  $("fName").value = c?c.name:"";
+  $("fSector").value = c?(c.sector||""):"";
+  $("fSite").value = c?(c.site||""):"";
+  $("fComp").value = c?(c.competitors||[]).join(", "):"";
+  $("fReviews").value = c?(c.reviewSources||[]).join(", "):"";
+  $("fKeywords").value = c?(c.keywords||[]).join(", "):"";
+  $("btnDeleteClient").style.display = c?"inline-flex":"none";
+  $("clientModal").classList.add("open");
+  $("fName").focus();
+}
+function closeModal(){ $("clientModal").classList.remove("open"); }
+$("btnCancelModal").onclick = closeModal;
+$("clientModal").onclick = (e)=>{ if(e.target===$("clientModal")) closeModal(); };
+
+$("btnSaveClient").onclick = async ()=>{
+  const name = $("fName").value.trim();
+  if(!name) return $("fName").focus();
+  const comps = $("fComp").value.split(",").map(s=>s.trim()).filter(Boolean);
+  if(comps.length > 4){
+    alert("Maximaal 4 concurrenten per klant — de eerste 4 worden gebruikt. Tip: maak voor een tweede speelveld (bijv. hypotheken naast makelaardij) een aparte klant aan.");
+  }
+  const data = {
+    name,
+    sector: $("fSector").value.trim(),
+    site: $("fSite").value.trim(),
+    competitors: comps.slice(0,4),
+    reviewSources: $("fReviews").value.split(",").map(s=>s.trim()).filter(Boolean),
+    keywords: $("fKeywords").value.split(",").map(s=>s.trim()).filter(Boolean)
+  };
+  if(editingClientId){
+    Object.assign(state.clients.find(x=>x.id===editingClientId), data);
+  }else{
+    const id = "c"+Date.now();
+    state.clients.push({id, ...data});
+    view = id; activeDate = null;
+  }
+  await saveState();
+  closeModal();
+  render();
+};
+
+$("btnDeleteClient").onclick = async ()=>{
+  if(!editingClientId) return;
+  const c = state.clients.find(x=>x.id===editingClientId);
+  if(!confirm(`"${c.name}" en alle opgeslagen insights verwijderen?`)) return;
+  state.clients = state.clients.filter(x=>x.id!==editingClientId);
+  delete state.insights[editingClientId];
+  if(view===editingClientId) view="dashboard";
+  await saveState();
+  closeModal();
+  render();
+};
+
+/* ---------- init ---------- */
+(async function init(){
+  $("todayLabel").textContent = new Date().toLocaleDateString("nl-NL",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  await loadState();
+  $("intervalSel").value = String(prefs.interval||0);
+  // laatste update-tijd afleiden uit meest recente rapport
+  let last = 0;
+  Object.values(state.insights).forEach(byDate=>{
+    Object.values(byDate).forEach(r=>{ if(r.generatedAt && r.generatedAt>last) last=r.generatedAt; });
+  });
+  if(last) $("liveStatus").textContent = "Laatste update: " + fmtTime(last);
+  scheduleNext();
+  render();
+})();
+</script>
+</body>
+</html>
