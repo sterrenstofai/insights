@@ -34,7 +34,7 @@ module.exports = async (req, res) => {
   if (!process.env.ACCESS_KEY) {
     return res.status(500).json({ error: "ACCESS_KEY ontbreekt in de Vercel environment variables" });
   }
-  if ((req.headers["x-access-key"] || "") !== process.env.ACCESS_KEY) {
+  if (String(req.headers["x-access-key"] || "").trim() !== String(process.env.ACCESS_KEY).trim()) {
     return res.status(401).json({ error: "Ongeldige toegangscode" });
   }
   const SUPA = process.env.SUPABASE_URL;
