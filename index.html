@@ -51,6 +51,9 @@ header.top{display:flex;align-items:center;justify-content:space-between;margin-
 }
 .countdown{font-variant-numeric:tabular-nums;color:var(--ink-faint)}
 .countdown.on{color:var(--ink)}
+#syncStatus{font-size:12px}
+#syncStatus.sync-ok{color:#2f9e5f}
+#syncStatus.sync-err{color:var(--accent);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 
 .btn{padding:11px 22px;border-radius:999px;font-size:14px;font-weight:500;background:var(--ink);color:#fff;transition:opacity .15s ease;display:inline-flex;align-items:center;gap:8px}
 .btn:hover{opacity:0.85}
@@ -241,6 +244,7 @@ header.top{display:flex;align-items:center;justify-content:space-between;margin-
   <div class="livebar">
     <span id="liveStatus">Laatste update: —</span>
     <span class="countdown" id="countdown"></span>
+    <span id="syncStatus" title="Status gedeelde opslag"></span>
     <span class="grow"></span>
     <label for="intervalSel" style="color:var(--ink-faint)">Auto-refresh</label>
     <select id="intervalSel">
@@ -301,6 +305,14 @@ const $ = (id)=>document.getElementById(id);
 let remoteOK = false;
 let syncTimer = null;
 
+function setSync(ok, msg){
+  const el = $("syncStatus");
+  if(!el) return;
+  el.className = ok ? "sync-ok" : "sync-err";
+  el.textContent = "· " + msg + (ok ? "" : " (klik om opnieuw te verbinden)");
+  el.onclick = ok ? null : ()=>{ localStorage.removeItem("trendradar:key"); location.reload(); };
+}
+
 async function loadState(){
   // 1) lokale cache direct laden (snel scherm)
   try{
@@ -315,16 +327,20 @@ async function loadState(){
   // 2) gedeelde opslag ophalen (jij en Rajiv zien dezelfde data)
   try{
     let key = getAccessKey(false);
-    if(key){
+    if(!key){ setSync(false, "geen toegangscode ingevoerd"); }
+    else{
       let resp = await fetch("/api/state", { headers: {"x-access-key": key} });
       if(resp.status === 401){
         localStorage.removeItem("trendradar:key");
         key = getAccessKey(true);
         if(key) resp = await fetch("/api/state", { headers: {"x-access-key": key} });
       }
-      if(resp && resp.ok){
+      if(resp && resp.status === 401){
+        setSync(false, "toegangscode onjuist");
+      }else if(resp && resp.ok){
         const data = await resp.json();
         remoteOK = true;
+        setSync(true, "gedeelde opslag actief");
         if(data && data.state && Array.isArray(data.state.clients)){
           state = data.state;
           try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
@@ -332,9 +348,12 @@ async function loadState(){
           // gedeelde opslag is nog leeg maar lokaal staat data: eenmalig omhoog syncen
           pushRemote();
         }
+      }else if(resp){
+        const data = await resp.json().catch(()=>({}));
+        setSync(false, data.error || ("serverfout " + resp.status));
       }
     }
-  }catch(e){ /* offline of nog niet geconfigureerd: lokaal verder */ }
+  }catch(e){ setSync(false, "geen verbinding met gedeelde opslag"); }
 
   if(!state.curation) state.curation = {};
 }
@@ -356,7 +375,16 @@ async function pushRemote(){
       body: JSON.stringify({ state })
     });
     remoteOK = resp.ok;
-  }catch(e){ remoteOK = false; }
+    if(resp.ok){
+      setSync(true, "gesynchroniseerd " + fmtTime(Date.now()));
+    }else{
+      const data = await resp.json().catch(()=>({}));
+      setSync(false, "opslaan mislukt: " + (data.error || resp.status));
+    }
+  }catch(e){
+    remoteOK = false;
+    setSync(false, "geen verbinding met gedeelde opslag");
+  }
 }
 
 async function savePrefs(){
