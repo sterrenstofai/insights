@@ -297,21 +297,68 @@ let timer = null, nextRunAt = null, tick = null;
 
 const $ = (id)=>document.getElementById(id);
 
-/* ---------- opslag (localStorage) ---------- */
+/* ---------- opslag: gedeeld via /api/state, localStorage als cache ---------- */
+let remoteOK = false;
+let syncTimer = null;
+
 async function loadState(){
+  // 1) lokale cache direct laden (snel scherm)
   try{
     const v = localStorage.getItem(STORE_KEY);
     if(v) state = JSON.parse(v);
   }catch(e){}
-  if(!state.curation) state.curation = {};
   try{
     const p = localStorage.getItem(PREF_KEY);
     if(p) prefs = JSON.parse(p);
   }catch(e){}
+
+  // 2) gedeelde opslag ophalen (jij en Rajiv zien dezelfde data)
+  try{
+    let key = getAccessKey(false);
+    if(key){
+      let resp = await fetch("/api/state", { headers: {"x-access-key": key} });
+      if(resp.status === 401){
+        localStorage.removeItem("trendradar:key");
+        key = getAccessKey(true);
+        if(key) resp = await fetch("/api/state", { headers: {"x-access-key": key} });
+      }
+      if(resp && resp.ok){
+        const data = await resp.json();
+        remoteOK = true;
+        if(data && data.state && Array.isArray(data.state.clients)){
+          state = data.state;
+          try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+        }else if(state.clients && state.clients.length){
+          // gedeelde opslag is nog leeg maar lokaal staat data: eenmalig omhoog syncen
+          pushRemote();
+        }
+      }
+    }
+  }catch(e){ /* offline of nog niet geconfigureerd: lokaal verder */ }
+
+  if(!state.curation) state.curation = {};
 }
+
 async function saveState(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+  // gedeelde opslag met korte debounce (bundelt snelle opeenvolgende wijzigingen)
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(pushRemote, 1200);
 }
+
+async function pushRemote(){
+  try{
+    const key = getAccessKey(false);
+    if(!key) return;
+    const resp = await fetch("/api/state", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-access-key":key},
+      body: JSON.stringify({ state })
+    });
+    remoteOK = resp.ok;
+  }catch(e){ remoteOK = false; }
+}
+
 async function savePrefs(){
   try{ localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); }catch(e){}
 }
