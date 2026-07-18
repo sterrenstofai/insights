@@ -12,10 +12,20 @@
 
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const MODEL = "claude-sonnet-4-6";
-const TRENDS_RSS = "https://trends.google.com/trending/rss?geo=NL";
+// Google Trends RSS kent meerdere endpoint-vormen; we proberen ze op volgorde.
+const TRENDS_URLS = [
+  "https://trends.google.com/trends/trendingsearches/daily/rss?geo=NL",
+  "https://trends.google.com/trending/rss?geo=NL&hl=nl",
+  "https://trends.google.nl/trends/trendingsearches/daily/rss?geo=NL",
+  "https://trends.google.com/trending/rss?geo=NL",
+];
 
 module.exports = async (req, res) => {
   res.setHeader("Content-Type", "application/json");
+  // Snelle route-check in de browser: GET zonder toegangscode bevestigt dat de functie bestaat
+  if (req.method === "GET" && !req.headers["x-access-key"]) {
+    return res.status(200).json({ ok: true, endpoint: "trends", hint: "Gebruik POST met x-access-key om trends op te halen." });
+  }
   if (!process.env.ACCESS_KEY) {
     return res.status(500).json({ error: "ACCESS_KEY ontbreekt in de Vercel environment variables" });
   }
@@ -31,7 +41,9 @@ module.exports = async (req, res) => {
     }
 
     // 2) Optioneel: per klant een inhaak-invalshoek genereren
-    const raw = (req.body && req.body.client) || null;
+    let body = req.body;
+    if (typeof body === "string") { try { body = JSON.parse(body); } catch (e) { body = {}; } }
+    const raw = (body && body.client) || null;
     let client = null;
     if (raw && raw.name) {
       client = {
@@ -86,23 +98,32 @@ Antwoord met ALLEEN geldige JSON, geen andere tekst:
   }
 };
 
-// ---- Google Trends RSS ophalen en parsen ----
+// ---- Google Trends RSS ophalen en parsen (meerdere varianten proberen) ----
 async function fetchTrends() {
-  const ctrl = new AbortController();
-  const t = setTimeout(() => ctrl.abort(), 8000);
-  try {
-    const r = await fetch(TRENDS_RSS, {
-      signal: ctrl.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; TrendradarBot/1.0)" },
-    });
-    if (!r.ok) return [];
-    const xml = await r.text();
-    return parseTrendsXml(xml);
-  } catch (e) {
-    return [];
-  } finally {
-    clearTimeout(t);
+  for (const url of TRENDS_URLS) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 8000);
+    try {
+      const r = await fetch(url, {
+        signal: ctrl.signal,
+        redirect: "follow",
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+          "Accept": "application/rss+xml, application/xml, text/xml, */*",
+          "Accept-Language": "nl-NL,nl;q=0.9,en;q=0.8",
+        },
+      });
+      if (!r.ok) continue;
+      const xml = await r.text();
+      const parsed = parseTrendsXml(xml);
+      if (parsed.length) return parsed;
+    } catch (e) {
+      /* volgende variant proberen */
+    } finally {
+      clearTimeout(t);
+    }
   }
+  return [];
 }
 
 function parseTrendsXml(xml) {
