@@ -148,11 +148,51 @@ Exact dit JSON-formaat:
       acties: arr(repC.acties),
     };
 
+    // og:image ophalen voor nieuws + inhakers (alleen echte bronbeelden, met timeout)
+    await attachImages([...report.nieuws, ...report.inhakers]);
+
     return res.status(200).json({ report });
   } catch (err) {
     return res.status(500).json({ error: err.message || "Onbekende serverfout" });
   }
 };
+
+// ---- og:image ophalen van de bron-URL (echte artikelfoto, geen fabricage) ----
+async function attachImages(items) {
+  const targets = items.filter((it) => it && it.url).slice(0, 8);
+  await Promise.allSettled(
+    targets.map(async (it) => {
+      try {
+        const img = await fetchOgImage(it.url);
+        if (img) it.afbeelding = img;
+      } catch (e) { /* geen beeld = kaart zonder foto, prima */ }
+    })
+  );
+}
+
+async function fetchOgImage(url) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 4000);
+  try {
+    const r = await fetch(url, {
+      signal: ctrl.signal,
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; TrendradarBot/1.0)" },
+    });
+    if (!r.ok) return null;
+    const html = (await r.text()).slice(0, 200000); // alleen de <head> is genoeg
+    const m =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i) ||
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i);
+    if (!m) return null;
+    let img = m[1].trim();
+    if (img.startsWith("//")) img = "https:" + img;
+    else if (img.startsWith("/")) { try { img = new URL(img, url).href; } catch (e) {} }
+    return img.startsWith("http") ? img : null;
+  } finally {
+    clearTimeout(t);
+  }
+}
 
 // ---- Anthropic-call met websearch ----
 async function callClaude(prompt) {
