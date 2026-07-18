@@ -1,4 +1,3 @@
-<!-- sync -->
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -9,14 +8,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f7f5f1;
-  --card:#fffdf9;
-  --ink:#141414;
+  --bg:#f4f1ec;
+  --card:#ffffff;
+  --ink:#1a1a18;
   --ink-soft:#6b6862;
-  --ink-faint:#a09c94;
+  --ink-faint:#a8a49c;
   --accent:#e02b20;
-  --line:#eceae4;
-  --radius:18px;
+  --line:#eeebe4;
+  --green:#2f9e5f;
+  --radius:20px;
+  --shadow:0 1px 2px rgba(30,28,24,0.04), 0 8px 24px rgba(30,28,24,0.05);
+  --shadow-hover:0 2px 4px rgba(30,28,24,0.05), 0 14px 34px rgba(30,28,24,0.09);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
@@ -43,10 +45,11 @@ header.top{display:flex;align-items:center;justify-content:space-between;margin-
 /* live-balk */
 .livebar{
   display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  background:var(--card);border-radius:999px;padding:8px 10px 8px 20px;margin-bottom:26px;
-  font-size:13px;color:var(--ink-soft);
+  background:var(--card);border-radius:999px;padding:10px 12px 10px 22px;margin-bottom:26px;
+  font-size:13px;color:var(--ink-soft);box-shadow:var(--shadow);
 }
 .livebar .grow{flex:1}
+.sel{border:1px solid var(--line);border-radius:999px;padding:9px 14px;background:var(--card);outline:none;color:var(--ink);font-family:inherit;font-size:13px;box-shadow:var(--shadow)}
 .livebar select{
   border:1px solid var(--line);border-radius:999px;padding:7px 12px;background:var(--bg);outline:none;color:var(--ink);
 }
@@ -67,20 +70,23 @@ header.top{display:flex;align-items:center;justify-content:space-between;margin-
 
 /* nav */
 .nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;align-items:center}
-.chip{padding:9px 18px;border-radius:999px;background:var(--card);font-size:14px;color:var(--ink-soft);border:1px solid transparent;transition:all .15s ease}
+.chip{padding:10px 18px;border-radius:999px;background:var(--card);font-size:14px;color:var(--ink-soft);border:1px solid transparent;transition:all .15s ease;box-shadow:var(--shadow);display:inline-flex;align-items:center;gap:9px}
 .chip:hover{color:var(--ink)}
 .chip.active{background:var(--ink);color:#fff}
-.chip.add{color:var(--ink-faint);border:1px dashed var(--ink-faint);background:transparent}
+.chip.add{color:var(--ink-faint);border:1px dashed var(--ink-faint);background:transparent;box-shadow:none}
 .chip.add:hover{color:var(--ink);border-color:var(--ink)}
 
+/* klantlogo: gekleurde initialen-avatar (waarheidsgetrouw, geen verzonnen beeld) */
+.logo{width:22px;height:22px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:'Inter Tight',sans-serif;color:#fff;flex:none;letter-spacing:0}
+
 /* dashboard grid */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px}
 .dash-card{
   background:var(--card);border-radius:var(--radius);padding:22px 24px;
   display:flex;flex-direction:column;gap:12px;cursor:pointer;
-  transition:transform .12s ease;
+  transition:transform .14s ease, box-shadow .14s ease;box-shadow:var(--shadow);
 }
-.dash-card:hover{transform:translateY(-2px)}
+.dash-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover)}
 .dash-card .d-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .dash-card h3{font-size:17px}
 .dash-card .d-time{font-size:12px;color:var(--ink-faint);white-space:nowrap}
@@ -92,18 +98,19 @@ header.top{display:flex;align-items:center;justify-content:space-between;margin-
 .badge.hot{background:#fdeceb;color:#8a2620}
 
 /* statsbar (Trend Hunter-stijl kerncijfers) */
-.pipeline{display:flex;align-items:stretch;gap:0;margin-bottom:22px;flex-wrap:wrap}
+.pipeline{display:flex;align-items:stretch;gap:0;margin-bottom:24px;flex-wrap:wrap}
 .p-stage{
-  flex:1;min-width:170px;background:var(--card);border-radius:16px;padding:18px 20px;
-  position:relative;
+  flex:1;min-width:180px;background:var(--card);border-radius:var(--radius);padding:22px 24px;
+  position:relative;box-shadow:var(--shadow);
 }
-.p-stage .p-eyebrow{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
-.p-stage .n{font-family:'Inter Tight',sans-serif;font-size:28px;font-weight:500;line-height:1.1}
+.p-stage .p-eyebrow{font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.p-stage .p-eyebrow .dot{width:7px;height:7px;border-radius:50%;flex:none}
+.p-stage .n{font-family:'Inter Tight',sans-serif;font-size:30px;font-weight:500;line-height:1.05}
 .p-stage .n.accent{color:var(--accent)}
-.p-stage .l{font-size:12px;color:var(--ink-soft);margin-top:4px}
+.p-stage .l{font-size:12.5px;color:var(--ink-soft);margin-top:5px}
 .p-arrow{
-  display:flex;align-items:center;justify-content:center;width:34px;flex:none;
-  color:var(--accent);font-size:18px;
+  display:flex;align-items:center;justify-content:center;width:36px;flex:none;
+  color:var(--ink-faint);font-size:17px;
 }
 @media (max-width:720px){
   .pipeline{flex-direction:column}
@@ -119,9 +126,9 @@ header.top{display:flex;align-items:center;justify-content:space-between;margin-
 .status-strip{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:22px}
 .status-pill{
   flex:none;background:var(--card);border-radius:14px;padding:12px 16px;cursor:pointer;
-  display:flex;align-items:center;gap:10px;font-size:13px;
+  display:flex;align-items:center;gap:10px;font-size:13px;box-shadow:var(--shadow);
 }
-.status-pill:hover{outline:1px solid var(--line)}
+.status-pill:hover{transform:translateY(-1px)}
 .status-pill b{font-weight:600;font-size:14px}
 .status-dot{width:7px;height:7px;border-radius:50%;flex:none}
 .status-dot.ok{background:#2f9e5f}
@@ -130,31 +137,35 @@ header.top{display:flex;align-items:center;justify-content:space-between;margin-
 .status-pill .st{color:var(--ink-faint);font-size:12px}
 
 /* feed filters */
-.feed-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
-.f-chip{padding:7px 15px;border-radius:999px;font-size:13px;color:var(--ink-soft);background:transparent;border:1px solid var(--line)}
+.feed-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.f-chip{padding:8px 16px;border-radius:999px;font-size:13px;color:var(--ink-soft);background:var(--card);border:1px solid transparent;box-shadow:var(--shadow)}
 .f-chip:hover{color:var(--ink)}
 .f-chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
 .f-chip.prio.active{background:var(--accent);border-color:var(--accent)}
 .feed-count{font-size:12px;color:var(--ink-faint);margin-left:auto}
 
 /* feedkaarten */
-.feed-card{background:var(--card);border-radius:16px;padding:20px 22px;display:flex;flex-direction:column;gap:8px}
+.feed-card{background:var(--card);border-radius:var(--radius);padding:20px 22px;display:flex;flex-direction:column;gap:9px;box-shadow:var(--shadow);transition:transform .14s ease, box-shadow .14s ease;overflow:hidden}
+.feed-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover)}
+.fc-image{margin:-20px -22px 4px;height:150px;background:var(--line) center/cover no-repeat;position:relative}
+.fc-image::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 60%,rgba(0,0,0,0.04))}
 .fc-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.fc-client{font-size:12px;font-weight:600;cursor:pointer}
+.fc-client{font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
 .fc-client:hover{text-decoration:underline;text-underline-offset:2px}
-.fc-cat{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-faint);padding:3px 8px;border-radius:999px;background:var(--bg)}
-.prio{font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;font-weight:600;margin-left:auto}
+.fc-cat{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-faint);padding:4px 9px;border-radius:999px;background:var(--bg)}
+.prio{font-size:10px;letter-spacing:0.06em;text-transform:uppercase;padding:4px 10px;border-radius:999px;font-weight:600;margin-left:auto}
 .prio.hoog{background:var(--accent);color:#fff}
 .prio.middel{background:var(--bg);color:var(--ink-soft)}
 .prio.laag{background:var(--bg);color:var(--ink-faint)}
-.feed-card h4{font-size:15px;font-weight:600;font-family:'Inter',sans-serif}
+.feed-card h4{font-size:15.5px;font-weight:600;font-family:'Inter',sans-serif;line-height:1.35}
 .feed-card .fc-sum{font-size:13.5px;color:var(--ink-soft)}
-.feed-card .fc-why{font-size:12.5px;color:var(--ink);padding-left:10px;border-left:2px solid var(--accent)}
-.feed-card .fc-src{font-size:12px;color:var(--ink-faint);margin-top:auto}
+.feed-card .fc-why{font-size:12.5px;color:var(--ink);padding-left:11px;border-left:2px solid var(--accent);line-height:1.5}
+.feed-card .fc-src{font-size:12px;color:var(--ink-faint);margin-top:auto;padding-top:4px;display:flex;align-items:center;gap:7px}
+.favicon{width:15px;height:15px;border-radius:4px;flex:none;object-fit:cover;background:var(--line)}
 .feed-card .fc-src a{color:var(--ink-faint);text-decoration:underline;text-underline-offset:2px}
 .feed-card .fc-src a:hover{color:var(--ink)}
-.fc-actions{display:flex;gap:8px;margin-top:6px;padding-top:10px;border-top:1px solid var(--line)}
-.c-btn{font-size:12px;padding:6px 13px;border-radius:999px;border:1px solid var(--line);color:var(--ink-soft);background:transparent}
+.fc-actions{display:flex;gap:8px;margin-top:6px;padding-top:12px;border-top:1px solid var(--line)}
+.c-btn{font-size:12px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);color:var(--ink-soft);background:transparent}
 .c-btn:hover{color:var(--ink);border-color:var(--ink-faint)}
 .c-btn.saved{background:var(--ink);color:#fff;border-color:var(--ink)}
 .c-btn.hide:hover{color:var(--accent);border-color:var(--accent)}
@@ -419,10 +430,15 @@ function renderNav(){
   dash.textContent = "Dashboard";
   dash.onclick = ()=>{ view="dashboard"; render(); };
   nav.appendChild(dash);
+  const trendsChip = document.createElement("button");
+  trendsChip.className = "chip" + (view==="trends" ? " active" : "");
+  trendsChip.textContent = "Trends";
+  trendsChip.onclick = ()=>{ view="trends"; render(); };
+  nav.appendChild(trendsChip);
   state.clients.forEach(c=>{
     const chip = document.createElement("button");
-    chip.className = "chip" + (view===c.id ? " active" : "");
-    chip.textContent = c.name;
+    chip.className = "chip klant" + (view===c.id ? " active" : "");
+    chip.innerHTML = clientLogo(c) + esc(c.name);
     chip.onclick = ()=>{ view=c.id; activeDate=null; render(); };
     nav.appendChild(chip);
   });
@@ -445,6 +461,7 @@ function render(){
     return;
   }
   if(view === "dashboard"){ renderDashboard(); }
+  else if(view === "trends"){ renderTrends(); }
   else{
     if(!state.clients.find(c=>c.id===view)){ view="dashboard"; return render(); }
     renderClientDetail(view);
@@ -503,19 +520,19 @@ function renderDashboard(){
 
   let h = `<div class="pipeline">
     <div class="p-stage">
-      <div class="p-eyebrow">Stap 1 · AI verzamelt</div>
+      <div class="p-eyebrow"><span class="dot" style="background:var(--ink-faint)"></span>Stap 1 · AI verzamelt</div>
       <div class="n">${feed.length}</div>
       <div class="l">signalen uit live websearch, over ${clientsToday}/${state.clients.length} klanten actueel vandaag</div>
     </div>
     <div class="p-arrow">→</div>
     <div class="p-stage">
-      <div class="p-eyebrow">Stap 2 · AI filtert</div>
+      <div class="p-eyebrow"><span class="dot" style="background:var(--accent)"></span>Stap 2 · AI filtert</div>
       <div class="n ${hoog?'accent':''}">${hoog}</div>
       <div class="l">gemarkeerd als hoge prioriteit${hiddenCount ? ` · ${hiddenCount} door jou verborgen` : ""}</div>
     </div>
     <div class="p-arrow">→</div>
     <div class="p-stage">
-      <div class="p-eyebrow">Stap 3 · Jij cureert</div>
+      <div class="p-eyebrow"><span class="dot" style="background:var(--green)"></span>Stap 3 · Jij cureert</div>
       <div class="n">${savedCount}</div>
       <div class="l">bewaard en klaar voor de klant</div>
     </div>
@@ -533,6 +550,7 @@ function renderDashboard(){
       else{ dot="stale"; st=fmtDate(rep.date); }
     }
     h += `<div class="status-pill" onclick="view='${c.id}';activeDate=null;render()">
+      ${clientLogo(c)}
       ${busy ? '<span class="mini-spin"></span>' : `<span class="status-dot ${dot}"></span>`}
       <b>${esc(c.name)}</b><span class="st">${st}</span></div>`;
   });
@@ -571,6 +589,73 @@ function renderDashboard(){
       <button class="btn" onclick="refreshAll()">Ververs alles</button></div>`;
   }
   main.innerHTML = h;
+}
+
+let trendsData = null;
+let trendsLoading = false;
+let trendsError = "";
+let trendsClientId = "";
+
+function renderTrends(){
+  const main = $("main");
+  const opts = state.clients.map(c=>`<option value="${c.id}" ${trendsClientId===c.id?"selected":""}>${esc(c.name)}</option>`).join("");
+  let h = `<div class="client-head">
+    <div>
+      <h2>Trends in Nederland</h2>
+      <div class="client-meta"><span>Live uit Google Trends — trending zoekopdrachten van vandaag</span></div>
+    </div>
+    <div class="head-actions">
+      <select id="trendsClient" class="sel" onchange="trendsClientId=this.value;loadTrends()">
+        <option value="">Invalshoek voor… (kies klant)</option>${opts}
+      </select>
+      <button class="btn" onclick="loadTrends()">${trendsData?"Vernieuwen":"Trends ophalen"}</button>
+    </div>
+  </div>`;
+
+  if(trendsLoading){
+    h += `<div class="loading"><div class="spinner"></div>Trends ophalen uit Google Trends…</div>`;
+  }else if(trendsError){
+    h += `<div class="error-box">${esc(trendsError)}</div>`;
+  }else if(trendsData && trendsData.length){
+    h += `<div class="grid">`;
+    trendsData.forEach(t=>{
+      h += `<div class="feed-card">
+        <div class="fc-top">
+          <span class="fc-cat idea-cat">Trending</span>
+          ${t.verkeer ? `<span class="prio middel">${esc(t.verkeer)}</span>` : ""}
+        </div>
+        <h4>${esc(t.titel)}</h4>
+        ${t.invalshoek ? `<div class="idea"><span>Contentidee</span>${esc(t.invalshoek)}</div>` : `<div class="fc-sum" style="color:var(--ink-faint)">${trendsClientId?"Geen passende invalshoek voor dit merk.":"Kies een klant voor een inhaak-invalshoek."}</div>`}
+        ${t.url ? `<div class="fc-src">${faviconHTML(t.url)}<a href="${escAttr(t.url)}" target="_blank" rel="noopener">${esc(domainOf(t.url)||"nieuwsbron")}</a></div>` : ""}
+      </div>`;
+    });
+    h += `</div>`;
+  }else if(trendsData){
+    h += `<div class="empty"><h3>Geen trends gevonden</h3><p>De Google Trends-feed gaf op dit moment geen resultaten terug. Probeer het later opnieuw.</p></div>`;
+  }else{
+    h += `<div class="empty"><h3>Trends in Nederland</h3><p>Haal de trending zoekopdrachten van vandaag op uit Google Trends. Kies een klant om er direct inhaak-invalshoeken bij te genereren.</p><button class="btn" onclick="loadTrends()">Trends ophalen</button></div>`;
+  }
+  main.innerHTML = h;
+}
+
+async function loadTrends(){
+  trendsLoading = true; trendsError = ""; render();
+  try{
+    const key = getAccessKey(false);
+    const client = trendsClientId ? state.clients.find(c=>c.id===trendsClientId) : null;
+    const resp = await fetch("/api/trends", {
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-access-key":key},
+      body: JSON.stringify(client ? { client:{ name:client.name, sector:client.sector } } : {})
+    });
+    const data = await resp.json().catch(()=>({}));
+    if(!resp.ok) throw new Error(data.error || ("Serverfout " + resp.status));
+    trendsData = Array.isArray(data.trends) ? data.trends : [];
+  }catch(err){
+    trendsError = "Trends ophalen mislukt: " + err.message;
+    trendsData = trendsData || [];
+  }
+  trendsLoading = false; render();
 }
 
 function renderClientDetail(clientId){
@@ -671,6 +756,30 @@ function renderReport(rep, client){
   return h;
 }
 
+/* Klantlogo: initialen + vaste kleur afgeleid van de naam (geen verzonnen beeld) */
+const LOGO_COLORS = ["#2f6f5e","#c65d2e","#3a5a8c","#8a4f7d","#6b7a2e","#a8522e","#2e7d7a","#7d492e"];
+function clientInitials(name){
+  const parts = String(name||"").trim().split(/\s+/).filter(Boolean);
+  if(!parts.length) return "?";
+  if(parts.length===1) return parts[0].slice(0,2);
+  return (parts[0][0]+parts[1][0]);
+}
+function clientColor(id){
+  let h=0; for(const ch of String(id)) h=(h*31+ch.charCodeAt(0))>>>0;
+  return LOGO_COLORS[h % LOGO_COLORS.length];
+}
+function clientLogo(c){
+  return `<span class="logo" style="background:${clientColor(c.id)}">${esc(clientInitials(c.name))}</span>`;
+}
+function domainOf(url){
+  try{ return new URL(url).hostname.replace(/^www\./,""); }catch(e){ return ""; }
+}
+function faviconHTML(url){
+  const d = domainOf(url);
+  if(!d) return "";
+  return `<img class="favicon" src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(d)}&sz=32" alt="" loading="lazy" onerror="this.style.visibility='hidden'">`;
+}
+
 /* Gedeelde kaartrenderer voor dashboard én klantweergave */
 function cardHTML(f, i, showClient){
   const st = (state.curation||{})[itemKey(f)];
@@ -686,9 +795,12 @@ function cardHTML(f, i, showClient){
   }else{
     catHtml = `<span class="fc-cat">${{nieuws:"Nieuws",markt:"Markt",reviews:"Reviews",concurrentie:"Concurrentie",inhakers:"Inhaker"}[f._cat]}</span>`;
   }
+  // og:image alleen bij nieuws en inhakers, en alleen als de server er een echte vond
+  const showImg = (f._cat==="nieuws" || f._cat==="inhakers") && f.afbeelding;
   return `<div class="feed-card">
+    ${showImg ? `<div class="fc-image" style="background-image:url('${escAttr(f.afbeelding)}')"></div>` : ""}
     <div class="fc-top">
-      ${showClient ? `<span class="fc-client" onclick="view='${f._client.id}';activeDate=null;render()">${esc(f._client.name)}</span>` : ""}
+      ${showClient ? `<span class="fc-client" onclick="view='${f._client.id}';activeDate=null;render()">${clientLogo(f._client)}${esc(f._client.name)}</span>` : ""}
       ${catHtml}
       ${f.prioriteit ? `<span class="prio ${esc(f.prioriteit)}">${esc(f.prioriteit)}</span>` : ""}
     </div>
@@ -696,7 +808,7 @@ function cardHTML(f, i, showClient){
     ${f.samenvatting ? `<div class="fc-sum">${esc(f.samenvatting)}</div>` : ""}
     ${f.relevantie ? `<div class="fc-why">${esc(f.relevantie)}</div>` : ""}
     ${f._cat==="inhakers" && f.invalshoek ? `<div class="idea"><span>Contentidee</span>${esc(f.invalshoek)}</div>` : ""}
-    ${(f.bron||f.url) ? `<div class="fc-src">${f.url ? `<a href="${escAttr(f.url)}" target="_blank" rel="noopener">${esc(f.bron||"bron")}</a>` : esc(f.bron)}${f._cat==="reviews" && f.datum ? " · "+esc(f.datum) : ""}${f._date!==today ? " · "+fmtDate(f._date) : ""}</div>` : ""}
+    ${(f.bron||f.url) ? `<div class="fc-src">${f.url?faviconHTML(f.url):""}${f.url ? `<a href="${escAttr(f.url)}" target="_blank" rel="noopener">${esc(f.bron||"bron")}</a>` : esc(f.bron)}${f._cat==="reviews" && f.datum ? " · "+esc(f.datum) : ""}${f._date!==today ? " · "+fmtDate(f._date) : ""}</div>` : ""}
     <div class="fc-actions">
       <button class="c-btn ${st==='saved'?'saved':''}" onclick="curate(${i},'save')">${st==='saved' ? '★ Bewaard' : '☆ Bewaren'}</button>
       ${st==='hidden'
